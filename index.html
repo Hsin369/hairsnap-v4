@@ -1,0 +1,72 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>HairSnap 表單（GAS 原生）</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; padding: 2rem; background: #f9f9f9; border-radius: 8px; }
+    label { display: block; margin-top: 1rem; }
+    input, textarea { width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 5px; }
+    button { margin-top: 1.5rem; padding: 0.75rem 1.5rem; background: black; color: white; border: none; border-radius: 6px; cursor: pointer; }
+    .success { color: green; margin-top: 1rem; }
+    .error { color: red; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <h2>HairSnap v4 原生 Notion 表單</h2>
+  <form id="hairsnapForm">
+    <label>髮型名稱 <input name="name" required /></label>
+    <label>分類 <input name="category" /></label>
+    <label>狀態 <input name="status" /></label>
+    <label>層次設計 <input name="layer" /></label>
+    <label>使用情境 <input name="scene" /></label>
+    <label>特點說明 <textarea name="features"></textarea></label>
+    <label>顏色/配件 <input name="color" /></label>
+    <label>圖片連結 <input name="image" /></label>
+    <button type="submit">送出到 Notion</button>
+  </form>
+  <div id="message"></div>
+
+  <script>
+    document.getElementById("hairsnapForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(this).entries());
+
+      const payload = {
+        token: "a7d8f49972916e30a7f6a505d0141530",
+        parent: {
+          database_id: "1d272e9f0b3480858edcd44a788c0c98"
+        },
+        properties: {
+          "髮型名稱": { title: [{ text: { content: data.name }}]},
+          "分類": { rich_text: [{ text: { content: data.category }}]},
+          "狀態": { rich_text: [{ text: { content: data.status }}]},
+          "層次設計": { rich_text: [{ text: { content: data.layer }}]},
+          "使用情境": { rich_text: [{ text: { content: data.scene }}]},
+          "特點說明": { rich_text: [{ text: { content: data.features }}]},
+          "顏色/配件": { rich_text: [{ text: { content: data.color }}]},
+          "圖片連結": { url: data.image }
+        }
+      };
+
+      const response = await fetch(window.location.href, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+      const msg = document.getElementById("message");
+      if (result.success) {
+        msg.innerHTML = "✅ 成功寫入 Notion！";
+        msg.className = "success";
+        this.reset();
+      } else {
+        msg.innerHTML = "❌ 錯誤：" + (result.message || "寫入失敗");
+        msg.className = "error";
+      }
+    });
+  </script>
+</body>
+</html>
